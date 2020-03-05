@@ -8,14 +8,5 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://gpfs/main/sys/shared/psfu/local/projects/cplex/CPLEX_Studio_Academic/12.3/x86_64/cpoptimizer/lib/ILOG.CP.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
   </component>
 </module>
