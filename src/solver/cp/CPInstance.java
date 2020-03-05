@@ -1,5 +1,6 @@
 package solver.cp;
 
+import ilog.concert.cppimpl.IloBoolVar;
 import ilog.cp.*;
 
 import ilog.concert.*;
@@ -30,7 +31,12 @@ public class CPInstance
 
   // ILOG CP Solver
   IloCP cp;
-    
+
+  public static int OFF = 0;
+  public static int NIGHT = 1;
+  public static int DAY = 2;
+  public static int EVENING = 3;
+
   public CPInstance(String fileName)
   {
     try
@@ -107,43 +113,104 @@ public class CPInstance
 
   public void solve()
   {
-    try
-    {
+    try {
       cp = new IloCP();
 
       // TODO: <Employee Scheduling Model Goes Here>
 
+      /// VARS ///
+
       // day x shift x employee -> [0,8]
       IloIntVar[][][] hours = new IloIntVar[numDays][numShifts][numEmployees];
-      // fill with [0, 8] vars
-      for (int d=0; d<numEmployees; d++) {
-        for (int s=0; s<numEmployees; s++) {
-          for (int e=0; e<numEmployees; e++) {
-            hours[d][s][e] = cp.intVar(0, 8);
+      // day x employee -> shift
+      IloIntVar[][] shift = new IloIntVar[numDays][numEmployees];
+      // fill shift and hours with vars
+      for (int d = 0; d < numDays; d++) {
+        for (int e = 0; e < numEmployees; e++) {
+          shift[d][e] = cp.intVar(0, numShifts);
+          for (int s = 1; s < numShifts; s++) {
+            hours[d][s][e] = cp.intVar(0, maxDailyWork);
           }
         }
       }
 
-      // day x shift x employee -> bool
-      IloBoolExpr[][][] isWorking = new IloBoolExpr[numDays][numShifts][numEmployees];
-      // fill with [0, 8] vars
-      for (int d=0; d<numEmployees; d++) {
-        for (int s=0; s<numEmployees; s++) {
-          for (int e=0; e<numEmployees; e++) {
-            isWorking[d][s][e] = cp.eq(hours[d][s][e], 0);
+      /// CONS ///
+
+      // 1. each employee can only do 1 shift per day
+      // 5. minimum continuous work period
+      for (int d = 0; d < numDays; d++) {
+        for (int e = 0; e < numEmployees; e++) {
+          for (int s = 1; s < numShifts; s++) {
+            cp.add(cp.equiv(cp.eq(shift[d][e], s), cp.ge(hours[d][s][e], minConsecutiveWork)));
           }
         }
       }
 
-      // one shift per employee per day
-//      for (IloIntVar[][] day : assign) {
+      // 2. meet minimum employee demand per shift
+      for (int d = 0; d < numDays; d++) {
+        IloIntVar[] vec = new IloIntVar[numEmployees];
+        for (int e = 0; e < numEmployees; e++) {
+          vec[e] = shift[d][e];
+        }
+        for (int s = 1; s < numShifts; s++) {
+          cp.add(cp.ge(cp.count(vec, s), minDemandDayShift[d][s]));
+        }
+      }
 
-//      }
+      // 3. meet minimum hour demand per day
+      for (int d = 0; d < numDays; d++) {
+        IloIntVar[] vec = new IloIntVar[numEmployees * (numShifts - 1)];
+        int i = 0;
+        for (int s = 1; s < numShifts; s++) {
+          for (int e = 0; e < numEmployees; e++) {
+            vec[i++] = hours[d][s][e];
+          }
+        }
+        cp.add(cp.ge(cp.sum(vec), minDailyOperation));
+      }
 
+      // 4. in first 4 days, employees do each shift
+      for (int e = 0; e < numEmployees; e++) {
+        IloIntVar[] vec = new IloIntVar[numShifts];
+        for (int d = 0; d < numShifts; d++) {
+          vec[d] = shift[d][e];
+        }
+        cp.add(cp.allDiff(vec));
+      }
 
+      // 6. max daily work: enforced by bounds
 
+      // 7. weekly work bounds
+      for (int e = 0; e < numEmployees; e++) {
+        for (int w = 0; w < numDays; w++) {
+          IloIntVar[] vec = new IloIntVar[7*numShifts];
+          int i = 0;
+          for (int d = 7 * w; d < 7 * (w + 1); d++) {
+            for (int s=1; s<numShifts; s++) {
+              vec[i++] = hours[d][s][e];
+            }
+          }
+          IloIntExpr sum = cp.sum(vec);
+          cp.add(cp.ge(sum, minWeeklyWork));
+          cp.add(cp.le(sum, maxWeeklyWork));
+        }
+      }
 
+      // 8. no consecutive night shifts
+      for (int d=0; d<numDays-1; d++) {
+        for (int e=0; e<numEmployees; e++) {
+          cp.add(cp.not(cp.and(cp.eq(shift[d][e], NIGHT), cp.eq(shift[d+1][e], NIGHT))));
+        }
+      }
 
+      // 9. limit night shifts in period
+      for (int e=0; e<numEmployees; e++) {
+        IloIntVar[] vec = new IloIntVar[numDays];
+        for (int d=0; d<numDays; d++) {
+          vec[d] = shift[d][e];
+        }
+        cp.add(cp.le(cp.count(vec, NIGHT), maxTotalNightShift));
+      }
 
 
       // TODO: </Employee Scheduling Model Goes Here>
