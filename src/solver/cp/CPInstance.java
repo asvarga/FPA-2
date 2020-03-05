@@ -111,7 +111,42 @@ public class CPInstance
     {
       cp = new IloCP();
 
-      // TODO: Employee Scheduling Model Goes Here
+      // TODO: <Employee Scheduling Model Goes Here>
+
+      // day x shift x employee -> [0,8]
+      IloIntVar[][][] hours = new IloIntVar[numDays][numShifts][numEmployees];
+      // fill with [0, 8] vars
+      for (int d=0; d<numEmployees; d++) {
+        for (int s=0; s<numEmployees; s++) {
+          for (int e=0; e<numEmployees; e++) {
+            hours[d][s][e] = cp.intVar(0, 8);
+          }
+        }
+      }
+
+      // day x shift x employee -> bool
+      IloBoolExpr[][][] isWorking = new IloBoolExpr[numDays][numShifts][numEmployees];
+      // fill with [0, 8] vars
+      for (int d=0; d<numEmployees; d++) {
+        for (int s=0; s<numEmployees; s++) {
+          for (int e=0; e<numEmployees; e++) {
+            isWorking[d][s][e] = cp.eq(hours[d][s][e], 0);
+          }
+        }
+      }
+
+      // one shift per employee per day
+//      for (IloIntVar[][] day : assign) {
+
+//      }
+
+
+
+
+
+
+
+      // TODO: </Employee Scheduling Model Goes Here>
         
       // Important: Do not change! Keep these parameters as is
       cp.setParameter(IloCP.IntParam.Workers, 1);
