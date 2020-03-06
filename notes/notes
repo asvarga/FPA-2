@@ -15,3 +15,11 @@ get ilog command completion:
 2. maybe restart intellij
 3. ctrl+alt+shift+s/cmd+; > dependencies
 4. check ILOG.CP.jar and apply
+
+
+TODO:
+- proper output
+- test
+- update teams.txt
+- fix hardcoded maxConsecutiveNightShift
+- optimize for something?
