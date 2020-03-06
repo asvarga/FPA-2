@@ -37,6 +37,8 @@ public class CPInstance
   public static int DAY = 2;
   public static int EVENING = 3;
 
+  public String solution = "";
+
   public CPInstance(String fileName)
   {
     try
@@ -238,7 +240,18 @@ public class CPInstance
         }
 
         // Uncomment this: for poor man's Gantt Chart to display schedules
-        prettyPrint(numEmployees, numDays, beginED, endED);
+//        prettyPrint(numEmployees, numDays, beginED, endED);
+
+        StringBuilder str = new StringBuilder();
+        for (int e=0; e<numEmployees; e++) {
+          for (int d=0; d<numDays; d++) {
+            str.append(beginED[e][d]);
+            str.append(" ");
+            str.append(endED[e][d]);
+            str.append(" ");
+          }
+        }
+        solution = str.toString();
       }
       else
       {
