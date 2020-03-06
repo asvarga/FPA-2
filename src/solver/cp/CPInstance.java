@@ -143,7 +143,10 @@ public class CPInstance
       for (int d = 0; d < numDays; d++) {
         for (int e = 0; e < numEmployees; e++) {
           for (int s = 1; s < numShifts; s++) {
-            cp.add(cp.equiv(cp.eq(shift[d][e], s), cp.ge(hours[d][s][e], minConsecutiveWork)));
+            cp.add(cp.ifThenElse(
+                    cp.eq(shift[d][e], s),
+                    cp.ge(hours[d][s][e], minConsecutiveWork),
+                    cp.eq(hours[d][s][e], 0)));
           }
         }
       }
