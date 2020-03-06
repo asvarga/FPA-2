@@ -127,7 +127,7 @@ public class CPInstance
       // fill shift and hours with vars
       for (int d = 0; d < numDays; d++) {
         for (int e = 0; e < numEmployees; e++) {
-          shift[d][e] = cp.intVar(0, numShifts);
+          shift[d][e] = cp.intVar(0, numShifts-1);
           for (int s = 1; s < numShifts; s++) {
             hours[d][s][e] = cp.intVar(0, maxDailyWork);
           }
@@ -182,8 +182,8 @@ public class CPInstance
 
       // 7. weekly work bounds
       for (int e = 0; e < numEmployees; e++) {
-        for (int w = 0; w < numDays; w++) {
-          IloIntVar[] vec = new IloIntVar[7*numShifts];
+        for (int w = 0; w < numDays/7; w++) {
+          IloIntVar[] vec = new IloIntVar[7*(numShifts-1)];
           int i = 0;
           for (int d = 7 * w; d < 7 * (w + 1); d++) {
             for (int s=1; s<numShifts; s++) {
@@ -225,9 +225,20 @@ public class CPInstance
       if(cp.solve())
       {
         cp.printInformation();
-        
+
+        int[][] beginED = new int[numEmployees][numDays];
+        int[][] endED = new int[numEmployees][numDays];
+
+        for (int d=0; d<numDays; d++) {
+          for (int e=0; e<numEmployees; e++) {
+            int s = (int)cp.getValue(shift[d][e]);
+            beginED[e][d] = s==0 ? -1 : 8*(s-1);
+            endED[e][d]   = s==0 ? -1 : beginED[e][d]+(int)cp.getValue(hours[d][s][e]);
+          }
+        }
+
         // Uncomment this: for poor man's Gantt Chart to display schedules
-        // prettyPrint(numEmployees, numDays, beginED, endED);	
+        prettyPrint(numEmployees, numDays, beginED, endED);
       }
       else
       {
@@ -307,7 +318,7 @@ public class CPInstance
       System.out.println("Error: " + e);
     }
   }
-  
+
   void solveAustraliaBinary()
   {
     String[] Colors = {"red", "green", "blue"};

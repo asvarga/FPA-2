@@ -7,3 +7,11 @@
         <SOURCES />
       </library>
     </orderEntry>
+
+
+
+get ilog command completion:
+1. put ILOG.CP.jar in repo
+2. maybe restart intellij
+3. ctrl+alt+shift+s/cmd+; > dependencies
+4. check ILOG.CP.jar and apply
